@@ -1,132 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Logger</title>
-
-    <!-- Add Bootstrap CSS link -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
-    <style>
-        body {
-            background-color: #333; /* Dark gray background */
-            color: #fff; /* White text color */
-        }
-
-        .button-container {
-            margin-bottom: 20px;
-        }
-
-        .toggle-button {
-            font-size: 30px; /* Increase font size */
-            padding: 40px 30px; /* Increase button height and padding */
-            margin: 5px;
-            display: block; /* Ensure buttons are stacked vertically */
-            width: 100%; /* Make buttons take full width */
-        }
-
-        .toggle-button.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .submit-button {
-            font-size: 25px; /* Increase font size */
-            padding: 30px 30px; /* Increase button height and padding */
-            margin-top: 20px;
-        }
-        
-        label {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <div class="row button-container">
-            <div class="col-md-6">
-                <div class="text-center">
-                    <label>From:</label>
+<!DOCTYPE html> <html lang="en"> 
+    <head> 
+        <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        <title>Trip Logger</title> <!-- Bootstrap 5 CSS --> 
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"> 
+        <style> 
+            body { background-color: #2b2b2b; color: #fff; } 
+            .panel { background: #3a3a3a; border-radius: .5rem; padding: 1rem; margin-bottom: 1rem; } 
+            .section-title { font-weight: 600; margin-bottom: .5rem; } 
+            .btn-choice { padding: 1.25rem; font-size: 1.25rem; } 
+            .btn-choice.active { background: #28a745; color: #fff; } 
+            .swap-btn { width: 100%; } 
+            .summary { font-size: 1.1rem; } 
+        </style> 
+    </head> 
+    
+    <body> 
+        <div class="container py-3"> 
+            <h1 class="h4 mb-3">Trip Logger</h1>
+            <div class="panel">
+                <div class="section-title">From</div>
+                <div class="btn-group w-100" role="group" aria-label="From choices">
+                    <button class="btn btn-outline-light btn-choice from" data-value="Gillette">Gillette</button>
+                    <button class="btn btn-outline-light btn-choice from" data-value="Millington">Millington</button>
+                    <button class="btn btn-outline-light btn-choice from" data-value="Central">Central</button>
                 </div>
-                <!-- Toggleable Buttons for "From:" -->
-                <button class="btn btn-secondary toggle-button from" onclick="selectFrom('Gillette')">Gillette</button>
-                <button class="btn btn-secondary toggle-button from" onclick="selectFrom('Millington')">Millington</button>
-                <button class="btn btn-secondary toggle-button from" onclick="selectFrom('Central')">Central</button>
             </div>
 
-            <div class="col-md-6">
-                <div class="text-center">
-                    <label>To:</label>
+            <div class="d-grid my-2">
+                <button id="swap" class="btn btn-secondary swap-btn">Swap From ↔ To</button>
+            </div>
+
+            <div class="panel">
+                <div class="section-title">To</div>
+                <div class="btn-group w-100" role="group" aria-label="To choices">
+                    <button class="btn btn-outline-light btn-choice to" data-value="Gillette">Gillette</button>
+                    <button class="btn btn-outline-light btn-choice to" data-value="Millington">Millington</button>
+                    <button class="btn btn-outline-light btn-choice to" data-value="Central">Central</button>
                 </div>
-                <!-- Toggleable Buttons for "To:" -->
-                <button class="btn btn-secondary toggle-button to" onclick="selectTo('Gillette')">Gillette</button>
-                <button class="btn btn-secondary toggle-button to" onclick="selectTo('Millington')">Millington</button>
-                <button class="btn btn-secondary toggle-button to" onclick="selectTo('Central')">Central</button>
             </div>
-        </div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <button class="btn btn-primary submit-button" onclick="submitForm()">Submit</button>
+            <div class="panel d-flex justify-content-between align-items-center">
+                <div class="summary">
+                    <span id="summaryText">Pick a route to see miles.</span>
+                </div>
+                <button id="submitBtn" class="btn btn-primary btn-lg" disabled>Submit</button>
             </div>
-        </div>
-    </div>
+        </div> <!-- Toast --> 
+            <div class="toast-container position-fixed bottom-0 end-0 p-3"> 
+                <div class="toast bg-success text-white" id="submitToast" data-bs-delay="5000"> 
+                    <div class="toast-header"> 
+                        <strong class="me-auto">Trip Logger</strong> <small class="text-muted">now</small> 
+                        <button type="button" class="btn-close btn-close-white ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button> 
+                    </div> 
+                    <div class="toast-body">Trip logged!</div>
+                </div>
+            </div> <!-- Bootstrap 5 JS bundle --> 
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
+        <script> 
+            // Keep in sync with logger.gs 
+            const RATE = 0.47;
 
-    <div class="toast-container position-absolute bottom-0 end-0">
-      <div class="toast bg-success text-white" id="submitToast" data-delay="5000">
-        <div class="toast-header">
-          Trip Logger
-        </div>
-        <div class="toast-body">
-          Trip logged! Please wait a moment before submitting another trip.
-        </div>
-      </div>
-    </div>
+            const DISTANCE = { 
+                Gillette: { Millington: 3.0, Central: 2.1 },
+                 Millington: { Gillette: 3.0, Central: 1.7 }, 
+                 Central: { Gillette: 2.1, Millington: 1.7 } 
+            }; 
 
-    <!-- Add Bootstrap JS and Popper.js scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+            let selectedFrom = null; 
+            let selectedTo = null;
 
-    <script>
-        var selectedFrom;
-        var selectedTo;
-
-        function selectFrom(from) {
-            selectedFrom = from;
-            updateButtonState('.toggle-button.from', from);
-        }
-
-        function selectTo(to) {
-            selectedTo = to;
-            updateButtonState('.toggle-button.to', to);
-        }
-
-        function updateButtonState(selector, selectedValue) {
-            const buttons = document.querySelectorAll(selector);
-            buttons.forEach((btn) => {
-                btn.classList.toggle('active', btn.textContent === selectedValue);
-            });
-        }
-
-        function submitForm() {
-          console.log("TO: " + selectedTo)
-          console.log("FROM: " + selectedFrom)
-            if (selectedFrom && selectedTo && selectedFrom != selectedTo) {
-                google.script.run.logTrip('USER1 SHEET', new Date().toLocaleDateString('en-US'), selectedFrom, selectedTo);
-                console.log("Trip successfully logged. Please wait at least 5 seconds before submitting another trip.");
+            function updateActive(selector, value) { 
+                document.querySelectorAll(selector).forEach(btn => { btn.classList.toggle('active', btn.dataset.value === value); });
+            } 
+            
+            function computeMiles(from, to) { 
+                if (!from || !to || from === to) return null; 
+                return (DISTANCE[from] && DISTANCE[from][to]) || null; 
+            } 
+            
+            function computeAmount(miles) { 
+                if (miles == null) return null; return Math.round(miles * RATE * 100) / 100; 
+            } 
+            
+            function updateSummary() { 
+                const miles = computeMiles(selectedFrom, selectedTo); 
+                const amount = computeAmount(miles); 
+                const textEl = document.getElementById('summaryText'); 
+                const submitBtn = document.getElementById('submitBtn'); 
                 
-                var submitToast = document.getElementById('submitToast');
-                var submitAlert = new bootstrap.Toast(submitToast);
-                submitAlert.show();
-            } else {
-                console.log('Please select "From" and "To" values before submitting.');
-            }
-        }
-    </script>
-</body>
+                if (!selectedFrom || !selectedTo) { 
+                    textEl.textContent = 'Pick a route to see miles.'; 
+                    submitBtn.disabled = true; return; 
+                } 
+                if (selectedFrom === selectedTo) {
+                        textEl.textContent = 'From and To must be different.'; 
+                        submitBtn.disabled = true; return; 
+                } 
+                if (miles == null) { 
+                    textEl.textContent = `No distance for ${selectedFrom} → ${selectedTo}.`; 
+                    submitBtn.disabled = true; return; 
+                } 
+                
+                textEl.textContent = `${selectedFrom} → ${selectedTo} • ${miles} miles • $${amount.toFixed(2)}`; 
+                submitBtn.disabled = false; 
+            } 
+            window.addEventListener('DOMContentLoaded', () => { 
+                // From buttons 
+                document.querySelectorAll('.btn-choice.from').forEach(btn => { btn.addEventListener('click', () => { selectedFrom = btn.dataset.value; updateActive('.btn-choice.from', selectedFrom); updateSummary(); }); }); 
+                
+                // To buttons 
+                document.querySelectorAll('.btn-choice.to').forEach(btn => { btn.addEventListener('click', () => { selectedTo = btn.dataset.value; updateActive('.btn-choice.to', selectedTo); updateSummary(); }); }); 
+                
+                // Swap From/To 
+                document.getElementById('swap').addEventListener('click', () => { [selectedFrom, selectedTo] = [selectedTo, selectedFrom]; updateActive('.btn-choice.from', selectedFrom); updateActive('.btn-choice.to', selectedTo); updateSummary(); }); 
+                
+                // Submit 
+                document.getElementById('submitBtn').addEventListener('click', () => { const dateStr = new Date().toLocaleDateString('en-US'); 
+                google.script.run .withSuccessHandler(function(res) { const body = document.querySelector('#submitToast .toast-body'); 
+                
+                if (res && res.ok) { const amountStr = (typeof res.amount === 'number') ? res.amount.toFixed(2) : computeAmount(res.miles).toFixed(2); body.textContent = `Trip logged: ${selectedFrom} → ${selectedTo} (${res.miles} miles, $${amountStr}).`; } 
+                else { body.textContent = 'Trip not logged. Please try again.'; } new bootstrap.Toast(document.getElementById('submitToast')).show(); }) .logTrip('USER1 SHEET', dateStr, selectedFrom, selectedTo); }); 
+            }); 
+        </script>
+    </body> 
 </html>

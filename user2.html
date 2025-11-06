@@ -1,0 +1,126 @@
+<!DOCTYPE html> <html lang="en"> 
+    <head> 
+        <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        <title>Trip Logger</title> <!-- Bootstrap 5 CSS --> 
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"> 
+        <style> 
+            body { background-color: #2b2b2b; color: #fff; } 
+            .panel { background: #3a3a3a; border-radius: .5rem; padding: 1rem; margin-bottom: 1rem; } 
+            .section-title { font-weight: 600; margin-bottom: .5rem; } 
+            .btn-choice { padding: 1.25rem; font-size: 1.25rem; } 
+            .btn-choice.active { background: #28a745; color: #fff; } 
+            .swap-btn { width: 100%; } 
+            .summary { font-size: 1.1rem; } 
+        </style> 
+    </head> 
+    
+    <body> 
+        <div class="container py-3"> 
+            <h1 class="h4 mb-3">Trip Logger</h1>
+            <div class="panel">
+                <div class="section-title">From</div>
+                <div class="btn-group w-100" role="group" aria-label="From choices">
+                    <button class="btn btn-outline-light btn-choice from" data-value="Gillette">Gillette</button>
+                    <button class="btn btn-outline-light btn-choice from" data-value="Millington">Millington</button>
+                    <button class="btn btn-outline-light btn-choice from" data-value="Central">Central</button>
+                </div>
+            </div>
+
+            <div class="d-grid my-2">
+                <button id="swap" class="btn btn-secondary swap-btn">Swap From ↔ To</button>
+            </div>
+
+            <div class="panel">
+                <div class="section-title">To</div>
+                <div class="btn-group w-100" role="group" aria-label="To choices">
+                    <button class="btn btn-outline-light btn-choice to" data-value="Gillette">Gillette</button>
+                    <button class="btn btn-outline-light btn-choice to" data-value="Millington">Millington</button>
+                    <button class="btn btn-outline-light btn-choice to" data-value="Central">Central</button>
+                </div>
+            </div>
+
+            <div class="panel d-flex justify-content-between align-items-center">
+                <div class="summary">
+                    <span id="summaryText">Pick a route to see miles.</span>
+                </div>
+                <button id="submitBtn" class="btn btn-primary btn-lg" disabled>Submit</button>
+            </div>
+        </div> <!-- Toast --> 
+            <div class="toast-container position-fixed bottom-0 end-0 p-3"> 
+                <div class="toast bg-success text-white" id="submitToast" data-bs-delay="5000"> 
+                    <div class="toast-header"> 
+                        <strong class="me-auto">Trip Logger</strong> <small class="text-muted">now</small> 
+                        <button type="button" class="btn-close btn-close-white ms-2 mb-1" data-bs-dismiss="toast" aria-label="Close"></button> 
+                    </div> 
+                    <div class="toast-body">Trip logged!</div>
+                </div>
+            </div> <!-- Bootstrap 5 JS bundle --> 
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> 
+        <script> 
+            // Keep in sync with logger.gs 
+            const RATE = 0.47;
+
+            const DISTANCE = { 
+                Gillette: { Millington: 3.0, Central: 2.1 },
+                 Millington: { Gillette: 3.0, Central: 1.7 }, 
+                 Central: { Gillette: 2.1, Millington: 1.7 } 
+            }; 
+
+            let selectedFrom = null; 
+            let selectedTo = null;
+
+            function updateActive(selector, value) { 
+                document.querySelectorAll(selector).forEach(btn => { btn.classList.toggle('active', btn.dataset.value === value); });
+            } 
+            
+            function computeMiles(from, to) { 
+                if (!from || !to || from === to) return null; 
+                return (DISTANCE[from] && DISTANCE[from][to]) || null; 
+            } 
+            
+            function computeAmount(miles) { 
+                if (miles == null) return null; return Math.round(miles * RATE * 100) / 100; 
+            } 
+            
+            function updateSummary() { 
+                const miles = computeMiles(selectedFrom, selectedTo); 
+                const amount = computeAmount(miles); 
+                const textEl = document.getElementById('summaryText'); 
+                const submitBtn = document.getElementById('submitBtn'); 
+                
+                if (!selectedFrom || !selectedTo) { 
+                    textEl.textContent = 'Pick a route to see miles.'; 
+                    submitBtn.disabled = true; return; 
+                } 
+                if (selectedFrom === selectedTo) {
+                        textEl.textContent = 'From and To must be different.'; 
+                        submitBtn.disabled = true; return; 
+                } 
+                if (miles == null) { 
+                    textEl.textContent = `No distance for ${selectedFrom} → ${selectedTo}.`; 
+                    submitBtn.disabled = true; return; 
+                } 
+                
+                textEl.textContent = `${selectedFrom} → ${selectedTo} • ${miles} miles • $${amount.toFixed(2)}`; 
+                submitBtn.disabled = false; 
+            } 
+            window.addEventListener('DOMContentLoaded', () => { 
+                // From buttons 
+                document.querySelectorAll('.btn-choice.from').forEach(btn => { btn.addEventListener('click', () => { selectedFrom = btn.dataset.value; updateActive('.btn-choice.from', selectedFrom); updateSummary(); }); }); 
+                
+                // To buttons 
+                document.querySelectorAll('.btn-choice.to').forEach(btn => { btn.addEventListener('click', () => { selectedTo = btn.dataset.value; updateActive('.btn-choice.to', selectedTo); updateSummary(); }); }); 
+                
+                // Swap From/To 
+                document.getElementById('swap').addEventListener('click', () => { [selectedFrom, selectedTo] = [selectedTo, selectedFrom]; updateActive('.btn-choice.from', selectedFrom); updateActive('.btn-choice.to', selectedTo); updateSummary(); }); 
+                
+                // Submit 
+                document.getElementById('submitBtn').addEventListener('click', () => { const dateStr = new Date().toLocaleDateString('en-US'); 
+                google.script.run .withSuccessHandler(function(res) { const body = document.querySelector('#submitToast .toast-body'); 
+                
+                if (res && res.ok) { const amountStr = (typeof res.amount === 'number') ? res.amount.toFixed(2) : computeAmount(res.miles).toFixed(2); body.textContent = `Trip logged: ${selectedFrom} → ${selectedTo} (${res.miles} miles, $${amountStr}).`; } 
+                else { body.textContent = 'Trip not logged. Please try again.'; } new bootstrap.Toast(document.getElementById('submitToast')).show(); }) .logTrip('USER2 SHEET', dateStr, selectedFrom, selectedTo); }); 
+            }); 
+        </script>
+    </body> 
+</html>

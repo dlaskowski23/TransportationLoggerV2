@@ -1,64 +1,66 @@
-const spreadsheetID = "YOUR SPREADSHEETID"
+const spreadsheetID = "1MuQABisfTMRM7O5tk2uaBBxc6dGAXYSAGkLnpnXthyM"
 
 function logTrip(name, date, tripFrom, tripTo) {
-  var ss = SpreadsheetApp.openById(spreadsheetID)
-  var sheet = ss.getSheetByName(name)
+  const RATE = 0.47;
+
+  const DISTANCE = {
+    Gillette: { Millington: 3.0, Central: 2.1 },
+    Millington: { Gillette: 3.0, Central: 1.7 },
+    Central: { Gillette: 2.1, Millington: 1.7 }
+  };
+
+  var ss = SpreadsheetApp.openById(spreadsheetID);
+  var sheet = ss.getSheetByName(name);
 
   if (tripFrom == tripTo) {
-    Logger.log("Error: departure cannot be the same as destination")
-    return
+    return { ok: false, error: "same_location" };
   }
 
-  sheet.appendRow([date, tripFrom, tripTo])
+  var miles = (DISTANCE[tripFrom] && DISTANCE[tripFrom][tripTo]) || 0;
+  // round to 2 decimals but keep as number
+  miles = Math.round(miles * 100) / 100;
 
-  var incrementCell
+  var amount = Math.round(miles * RATE * 100) / 100;
+
+  // Append row: A:Date, B:From, C:To, D:Miles, E:Amount
+  sheet.appendRow([date, tripFrom, tripTo, miles, amount]);
+
+  // Optional: keep your counters
+  var incrementCell;
 
   switch (tripFrom) {
     case "Gillette":
-      if (tripTo == "Millington") {
-        incrementCell = "G2"
-      }
-      else if (tripTo == "Central") {
-        incrementCell = "F2"
-      }
-      break
-
+      if (tripTo == "Millington") incrementCell = "G2";
+      else if (tripTo == "Central") incrementCell = "F2";
+      break;
     case "Central":
-      if (tripTo == "Millington") {
-        incrementCell = "H2"
-      }
-      else if (tripTo == "Gillette") {
-        incrementCell = "F2"
-      }
-      break
-
+      if (tripTo == "Millington") incrementCell = "H2";
+      else if (tripTo == "Gillette") incrementCell = "F2";
+      break;
     case "Millington":
-      if (tripTo == "Gillette") {
-        incrementCell = "G2"
-      }
-      else if (tripTo == "Central") {
-        incrementCell = "H2"
-      }
-      break
-
-    default:
-      Logger.log("Invalid")
-      return
+      if (tripTo == "Gillette") incrementCell = "G2";
+      else if (tripTo == "Central") incrementCell = "H2";
+      break;
   }
 
-  sheet.getRange(incrementCell).setValue(sheet.getRange(incrementCell).getValue() + 1)
+  if (incrementCell) {
+    var v = Number(sheet.getRange(incrementCell).getValue()) || 0;
+    sheet.getRange(incrementCell).setValue(v + 1);
+  }
 
-  Logger.log("Trip successfully logged. Please wait at least 5 seconds before submitting another trip.")
-  Utilities.sleep(5000)
+  return { ok: true, miles: miles, amount: amount, rate: RATE };
+
 }
 
-function doGet() {
+function doGet(e) {
   var user = Session.getActiveUser().getEmail()
-  if(user == 'USER1 EMAIL'){
-    return HtmlService.createHtmlOutputFromFile('USER1');
-  }
-  else if(user == 'USER2 EMAIL'){
-    return HtmlService.createHtmlOutputFromFile('USER2');
+  var isMobile = e && e.parameter && e.parameter.ui === 'mobile';
+
+  if (user === 'dlaskowski@longhill.org' || user === 'david.1120.laskowski@gmail.com') {
+    return HtmlService.createHtmlOutputFromFile(isMobile ? 'USER1_MOBILE' : 'USER1');
+  } 
+  else if (user === 'Jackhartnett24@gmail.com' || user === 'jhartnett@longhill.org') {
+    return HtmlService.createHtmlOutputFromFile(isMobile ? 'USER2_MOBILE' : 'USER2');
   }
   else{
     return HtmlService.createHtmlOutput('Access not recognized or authorized.');
